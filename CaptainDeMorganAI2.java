@@ -7,6 +7,7 @@ import java.util.Random;
 import java.util.HashMap;
 import java.util.HashSet;
 
+// minimax only
 public class CaptainDeMorganAI2 extends CKPlayer {
 
 	// CaptainDeMorgainAI's arg constructor calls CKPlayer's arg constructor
