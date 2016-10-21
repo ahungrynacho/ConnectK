@@ -7,6 +7,7 @@ import java.util.Random;
 import java.util.HashMap;
 import java.util.HashSet;
 
+// initial attempt
 public class CaptainDeMorganAI extends CKPlayer {
 	private byte HUMAN = 1;
 	private byte AI;
