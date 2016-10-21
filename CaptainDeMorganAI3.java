@@ -7,6 +7,7 @@ import java.util.Random;
 import java.util.HashMap;
 import java.util.HashSet;
 
+// depth-cutoff and heuristic function
 public class CaptainDeMorganAI3 extends CKPlayer {
 
 	// CaptainDeMorgainAI's arg constructor calls CKPlayer's arg constructor
