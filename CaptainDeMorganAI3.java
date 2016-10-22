@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class CaptainDeMorganAI3 extends CKPlayer {
-	private int cutOff = 9;
+	private int cutOff = 0;
 	// CaptainDeMorgainAI's arg constructor calls CKPlayer's arg constructor
 	public CaptainDeMorganAI3(byte player, BoardModel state) {
 		super(player, state);
@@ -19,7 +19,9 @@ public class CaptainDeMorganAI3 extends CKPlayer {
 	public Point getMove(BoardModel state) {
 		int initDepth = this.depth(state);
 		Node n = new Node(state, initDepth, null, this.cutOff);
+		
 		Point move = this.minimax(n).getMove(); // initialized to null if AI is player 1 making the first move
+		System.out.println("Node Count: " + Node.getNodeCount());
 		return move;
 	}
 
@@ -40,15 +42,16 @@ public class CaptainDeMorganAI3 extends CKPlayer {
 	}
 	
 	private Node minimax(Node n) {
-		
 		HashSet<Point> nextMoves = n.nextMoves();
+//		Node.incNodeCount(nextMoves.size());
 		
 		int bestRank = Integer.MIN_VALUE;
 		Node bestNode = null;
 		
 		for (Point p : nextMoves) {
 //			System.out.println("Last Move: " + n.getState().getSpace(n.getState().getLastMove()));
-			Node nextNode = new Node(n.nextState(p), n.getDepth()+1, p, this.cutOff); // currently at depth = 1; lastMove() returns 2
+			Node nextNode = new Node(n.nextState(p), n.getDepth()+1, p, n.getCutoff()); // currently at depth = 1; lastMove() returns 2
+			
 			int rank = this.min(nextNode, nextNode.getDepth()).getRank();
 //			System.out.println("-------------------------");
 //			System.out.println("player: " + nextNode.getPlayer() + " opponent: " + nextNode.getOpponent());
@@ -67,6 +70,7 @@ public class CaptainDeMorganAI3 extends CKPlayer {
 		
 	private Node min(Node n, int depth) {
 		// minimize player 1
+
 		if (n.getState().winner() != -1) {
 //			System.out.println("min: player " + n.getPlayer());
 			n.evalGame();
@@ -74,19 +78,23 @@ public class CaptainDeMorganAI3 extends CKPlayer {
 		}
 		
 		HashSet<Point> nextMoves = n.nextMoves();
+//		Node.incNodeCount(nextMoves.size());
 		int bestRank = Integer.MAX_VALUE;
 		Node bestNode = null;
 		
-		if (n.getDepth()+1 == n.getCutoff()) {
+		if (n.getDepth() >= n.getCutoff()) {
 			
+			// use the next state to evaluate the heuristic
 			for (Point p : nextMoves) {
-				Node nextNode = new Node(n.nextState(p), depth+1, p, this.cutOff);
+				Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
+				
 				if (nextNode.getState().winner() != -1) { // if the next state is the winning state
 					nextNode.evalGame();
 					return nextNode;
 				}
 				
 				int rank = -nextNode.heuristic(p); // -maxRank < hRank < maxRank
+//				System.out.println(nextNode.getState().toString() + "Depth: " + nextNode.getDepth());
 				if (rank < bestRank) {
 					bestRank = rank;
 					bestNode = nextNode;
@@ -96,7 +104,8 @@ public class CaptainDeMorganAI3 extends CKPlayer {
 		
 		else {
 			for (Point p : nextMoves) {
-				Node nextNode = new Node(n.nextState(p), depth+1, p, this.cutOff);					
+				Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
+				
 				int rank = max(nextNode, nextNode.getDepth()).getRank();
 				
 				if (rank < bestRank) {
@@ -119,13 +128,15 @@ public class CaptainDeMorganAI3 extends CKPlayer {
 		}
 		
 		HashSet<Point> nextMoves = n.nextMoves();
+//		Node.incNodeCount(nextMoves.size());
 		int bestRank = Integer.MIN_VALUE;
 		Node bestNode = null;
 		
-		if (n.getDepth()+1 == n.getCutoff()) {
+		if (n.getDepth() >= n.getCutoff()) {
 			
 			for (Point p : nextMoves) {
-				Node nextNode = new Node(n.nextState(p), depth+1, p, this.cutOff);
+				Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
+				
 				if (nextNode.getState().winner() != -1) { // if the next state is the winning state
 					nextNode.evalGame();
 					return nextNode;
@@ -141,7 +152,7 @@ public class CaptainDeMorganAI3 extends CKPlayer {
 		
 		else {
 			for (Point p : nextMoves) {
-				Node nextNode = new Node(n.nextState(p), depth+1, p, this.cutOff);
+				Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
 				
 				int rank = min(nextNode, nextNode.getDepth()).getRank();
 				

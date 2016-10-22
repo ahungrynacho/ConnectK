@@ -13,7 +13,7 @@ public class Node {
 		private int cutoff; // maximum depth to be evaluated, inclusive; root depth = 0
 		private int maxHRank;
 		private int maxRank;
-		private static int nodeCount;
+		private static int nodeCount = 0;
 		
 		Node(BoardModel state, int depth, Point move, int cutoff) {
 			this.depth = depth;
@@ -192,8 +192,8 @@ public class Node {
 			return nodeCount;
 		}
 
-		public static void setNodeCount(int nodeCount) {
-			Node.nodeCount = nodeCount;
+		public static void incNodeCount(int n) {
+			Node.nodeCount += n;
 		}
 		
 		public int getPlayer() {
