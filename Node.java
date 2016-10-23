@@ -7,12 +7,10 @@ public class Node {
 		private int rank;
 		private int depth;
 		private BoardModel state;
-		private Point move; // move previously made by the current player to get to Node's (belonging to current player) current state
+		private Point move; // move made by the current player to get to the current player Node's current state
 		private int player; // current player
 		private int opponent;
 		private int cutoff; // maximum depth to be evaluated, inclusive; root depth = 0
-		private int maxHRank;
-		private int maxRank;
 		private static int nodeCount = 0;
 		
 		Node(BoardModel state, int depth, Point move, int cutoff) {
@@ -22,9 +20,6 @@ public class Node {
 			this.player = this.currentPlayer();
 			this.opponent = this.opponentPlayer();
 			this.cutoff = cutoff;
-			this.maxHRank = 8 * (this.state.getkLength() - 1); // max number of pieces surrounding but not including the winning piece
-			this.maxRank = 10 - (this.maxHRank % 10) + this.maxHRank;
-			
 			// For a 3-in-a-row win condition, maxHRank = 16 and maxRank = 20.
 			
 		}
@@ -60,9 +55,9 @@ public class Node {
 			
 			// this part works
 			if (winner == 1)
-				this.rank = -this.maxRank;
+				this.rank = -10;
 			else if (winner == 2)
-				this.rank = this.maxRank;
+				this.rank = 10;
 			else if (winner == 0)
 				this.rank = 0;
 		}
@@ -87,105 +82,153 @@ public class Node {
 			return nextState.placePiece(move, (byte) this.player);
 
 		}
-
+		
+		private boolean isStreak(int s) {
+			return s == this.state.getkLength();
+		}
+		
+		private boolean isDirStreak(int s) {
+			return (s-1) == this.state.getkLength();
+		}
+		
 		public int heuristic(Point p) {
 			// direct-adjacent heuristic
 			// consider passing heuristic() into the constructor as an argument (lambda in J8 an or interface in J7)
 			int hRank = 0;
-			
-			if (this.state.winner() != -1)
-			
 
 			// top to bottom
+			int verticalStreak = 0;
+			int streak = 0;
 			for (int x = p.x; x < this.state.getWidth(); x++) {
-				if (this.state.getSpace(x, p.y) != this.getPlayer()) // if 0 or opponent
+				if (streak >= this.state.getkLength() || this.state.getSpace(x, p.y) == this.opponent)
 					break;
-				else
-					hRank++;
+				else {// if (this.state.getSpace(x, p.y) == 0 or == this.player
+					streak++;
+					verticalStreak++;
+				}
 			}
+			if (this.isStreak(streak))
+				hRank++;
+			streak = 0;
 			
 			// bottom to top
 			for (int x = p.x; x >= 0; x--) {
-				if (this.state.getSpace(x, p.y) != this.getPlayer())
+				if (streak >= this.state.getkLength() || this.state.getSpace(x, p.y) == this.opponent)
 					break;
-				else
-					hRank++;
+				else {// if (this.state.getSpace(x, p.y) == 0 or == this.player
+					streak++;
+					verticalStreak++;
+				}
 			}
+			if (this.isStreak(streak) || this.isDirStreak(verticalStreak))
+				hRank++;
+			streak = 0;
 			
 			// left to right
+			int horizontalStreak = 0;
 			for (int y = p.y; y < this.state.getHeight(); y++) {
-				if (this.state.getSpace(p.x, y) != this.getPlayer())
+				if (streak >= this.state.getkLength() || this.state.getSpace(p.x, y) == this.opponent)
 					break;
-				else
-					hRank++;
+				else {// if (this.state.getSpace(x, p.y) == 0 or == this.player
+					streak++;
+					horizontalStreak++;
+				}
 			}
+			if (this.isStreak(streak))
+				hRank++;
+			streak = 0;
 			
 			// right to left
 			for (int y = p.y; y >= 0; y--) {
-				if (this.state.getSpace(p.x, y) != this.getPlayer())
+				if (streak >= this.state.getkLength() || this.state.getSpace(p.x, y) == this.opponent)
 					break;
-				else
-					hRank++;
+				else {// if (this.state.getSpace(x, p.y) == 0 or == this.player
+					streak++;
+					horizontalStreak++;
+				}
 			}
 			
+			if (this.isStreak(streak) || this.isDirStreak(horizontalStreak))
+				hRank++;
+			streak = 0;
+			
 			// upper-right
+			int diagUpStreak = 0;
 			try {
 				
 				int y = p.y;
 				for (int x = p.x; x >= 0; x--) {
-					if (this.state.getSpace(x,y) != this.getPlayer())
+					if (streak >= this.state.getkLength() || this.state.getSpace(x, y) == this.opponent)
 						break;
-					else {
-						hRank++;
+					else { // if (this.state.getSpace(x, p.y) == 0 or == this.player
+						streak++;
+						diagUpStreak++;
 						y++;
 					}
 				}
 			} catch (IndexOutOfBoundsException e) {}
 			
-			// upper-left
-			try {
-				int y = p.y;
-				for (int x = p.x; x >= 0; x--) {
-					if (this.state.getSpace(x,y) != this.getPlayer())
-						break;
-					else {
-						hRank++;
-						y--;
-					}
-				}
-			} catch (IndexOutOfBoundsException e) {}
+			if (this.isStreak(streak))
+				hRank++;
+			streak = 0;
 			
 			// lower-left
 			try {
 				int y = p.y;
 				for (int x = p.x; x < this.state.getWidth(); x++) {
-					if (this.state.getSpace(x,y) != this.getPlayer())
+					if (streak >= this.state.getkLength() || this.state.getSpace(x, y) == this.opponent)
 						break;
-					else {
-						hRank++;
+					else { // if (this.state.getSpace(x, p.y) == 0 or == this.player
+						streak++;
+						diagUpStreak++;
 						y--;
 					}
 				}
 			} catch (IndexOutOfBoundsException e) {}
+			
+			if (this.isStreak(streak) || this.isDirStreak(diagUpStreak))
+				hRank++;
+			streak = 0;
+			
+			// upper-left
+			int diagDownStreak = 0;
+			try {
+				int y = p.y;
+				for (int x = p.x; x >= 0; x--) {
+					if (streak >= this.state.getkLength() || this.state.getSpace(x, y) == this.opponent)
+						break;
+					else { // if (this.state.getSpace(x, p.y) == 0 or == this.player
+						streak++;
+						diagDownStreak++;
+						y--;
+					}
+				}
+			} catch (IndexOutOfBoundsException e) {}
+			
+			if (this.isStreak(streak))
+				hRank++;
+			streak = 0;
 		
 			// lower-right
 			try {	
 				
 				int y = p.y;
 				for (int x = p.x; x < this.state.getWidth(); x++) {
-//					System.out.println("lower-right: " + x + "," + y);
-					
-					if (this.state.getSpace(x,y) != this.getPlayer())
+					if (streak >= this.state.getkLength() || this.state.getSpace(x, y) == this.opponent)
 						break;
-					else {
-						hRank++;
+					else { // if (this.state.getSpace(x, p.y) == 0 or == this.player
+						streak++;
+						diagDownStreak++;
 						y++;
 					}
 				}
 			} catch (IndexOutOfBoundsException e) {}
 			
-			// should return a minimum hRank of 8 since the piece at p is counted in 8 directions, unless offset by -8
-			return hRank - 8;
+			if (this.isStreak(streak) || this.isDirStreak(diagDownStreak))
+				hRank++;
+			streak = 0;
+			
+			return hRank;
 		}
 		
 		public static int getNodeCount() {
@@ -237,20 +280,21 @@ public class Node {
 		}
 		
 //		public static void main(String[] args) {
-//			BoardModel board = new BoardModel(3, 3, 3, false);
-//			board = board.placePiece(new Point(2,2), (byte) 1);
-//			board = board.placePiece(new Point(0,1), (byte) 2);
-//			board = board.placePiece(new Point(0,0), (byte) 2);
-//			board = board.placePiece(new Point(1,0), (byte) 2);
-//			board = board.placePiece(new Point(2,0), (byte) 2);
-//			board = board.placePiece(new Point(2,1), (byte) 1);
+//			BoardModel board = new BoardModel(3, 3, 2, false);
+////			board = board.placePiece(new Point(0,2), (byte) 1);
+////			board = board.placePiece(new Point(0,1), (byte) 2);
+////			board = board.placePiece(new Point(1,0), (byte) 2);
+////			board = board.placePiece(new Point(2,0), (byte) 2);
+////			board = board.placePiece(new Point(2,1), (byte) 1);
+////			board = board.placePiece(new Point(0,0), (byte) 1);
+//
 ////			board.placePiece(new Point(2,2), (byte) 1);
 //			
 //			Node n = new Node(board, 0, null, 3);
 //			
-//			System.out.println(n.getPlayer());
+//			System.out.println("Current player:" + n.getPlayer());
 //			System.out.println(n.getState().toString());
-//			System.out.println(n.heuristic(new Point(0,0)));
+//			System.out.println(-n.heuristic(new Point(1,1)));
 //			
 //		}
 	}

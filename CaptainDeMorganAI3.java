@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class CaptainDeMorganAI3 extends CKPlayer {
-	private int cutOff = 0;
+	private int cutOff = 4;
 	// CaptainDeMorgainAI's arg constructor calls CKPlayer's arg constructor
 	public CaptainDeMorganAI3(byte player, BoardModel state) {
 		super(player, state);
@@ -71,50 +71,31 @@ public class CaptainDeMorganAI3 extends CKPlayer {
 	private Node min(Node n, int depth) {
 		// minimize player 1
 
-		if (n.getState().winner() != -1) {
-//			System.out.println("min: player " + n.getPlayer());
+		if (n.getState().winner() != -1) { // base case 1: no more available moves
 			n.evalGame();
 			return n;
 		}
 		
+		if (n.getDepth() >= n.getCutoff()) { // base case 2: depth cut-off reached so rank current state with the heuristic function
+			n.setRank(-n.heuristic(n.getMove())); // negative heuristic value
+			return n;
+		}
+		
 		HashSet<Point> nextMoves = n.nextMoves();
-//		Node.incNodeCount(nextMoves.size());
 		int bestRank = Integer.MAX_VALUE;
 		Node bestNode = null;
 		
-		if (n.getDepth() >= n.getCutoff()) {
+		for (Point p : nextMoves) {
+			Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
 			
-			// use the next state to evaluate the heuristic
-			for (Point p : nextMoves) {
-				Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
-				
-				if (nextNode.getState().winner() != -1) { // if the next state is the winning state
-					nextNode.evalGame();
-					return nextNode;
-				}
-				
-				int rank = -nextNode.heuristic(p); // -maxRank < hRank < maxRank
-//				System.out.println(nextNode.getState().toString() + "Depth: " + nextNode.getDepth());
-				if (rank < bestRank) {
-					bestRank = rank;
-					bestNode = nextNode;
-				}
+			int rank = max(nextNode, nextNode.getDepth()).getRank();
+			
+			if (rank < bestRank) {
+				bestRank = rank;
+				bestNode = nextNode;
 			}
 		}
-		
-		else {
-			for (Point p : nextMoves) {
-				Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
 				
-				int rank = max(nextNode, nextNode.getDepth()).getRank();
-				
-				if (rank < bestRank) {
-					bestRank = rank;
-					bestNode = nextNode;
-				}
-			}
-				
-		}
 		bestNode.setRank(bestRank);
 		return bestNode;
 	}
@@ -122,47 +103,32 @@ public class CaptainDeMorganAI3 extends CKPlayer {
 
 	private Node max(Node n, int depth) {
 		// maximize player 2
-		if (n.getState().winner() != -1) {
+		if (n.getState().winner() != -1) { // base case 1
 			n.evalGame();
 			return n;
 		}
 		
+		if (n.getDepth() >= n.getCutoff()) { // base case 2: depth cut-off reached so rank current state with the heuristic function
+			n.setRank(n.heuristic(n.getMove())); // positive heuristic value
+			return n;
+		}
+		
 		HashSet<Point> nextMoves = n.nextMoves();
-//		Node.incNodeCount(nextMoves.size());
 		int bestRank = Integer.MIN_VALUE;
 		Node bestNode = null;
 		
-		if (n.getDepth() >= n.getCutoff()) {
+		for (Point p : nextMoves) {
+			Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
 			
-			for (Point p : nextMoves) {
-				Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
-				
-				if (nextNode.getState().winner() != -1) { // if the next state is the winning state
-					nextNode.evalGame();
-					return nextNode;
-				}
-				
-				int rank = nextNode.heuristic(p); // -maxRank < hRank < maxRank
-				if (rank > bestRank) {
-					bestRank = rank;
-					bestNode = nextNode;
-				}
+			int rank = min(nextNode, nextNode.getDepth()).getRank();
+			
+			if (rank > bestRank) {
+				bestRank = rank;
+				bestNode = nextNode;
 			}
+
 		}
 		
-		else {
-			for (Point p : nextMoves) {
-				Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
-				
-				int rank = min(nextNode, nextNode.getDepth()).getRank();
-				
-				if (rank > bestRank) {
-					bestRank = rank;
-					bestNode = nextNode;
-				}
-	
-			}
-		}
 		bestNode.setRank(bestRank);
 		return bestNode;
 	}
