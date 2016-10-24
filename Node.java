@@ -1,6 +1,5 @@
 import java.awt.Point;
 import java.util.HashSet;
-
 import connectK.BoardModel;
 
 public class Node {
@@ -44,14 +43,6 @@ public class Node {
 		
 		public void evalGame() {
 			byte winner = this.state.winner();
-			
-			// this part is broken...does not play optimally for AI vs AI
-//			if (winner == opponent)
-//				this.rank = -10;
-//			else if (winner == player)
-//				this.rank = 10;
-//			else if (winner == 0)
-//				this.rank = 0;
 			
 			// this part works
 			if (winner == 1)
