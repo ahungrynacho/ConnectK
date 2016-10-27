@@ -19,7 +19,6 @@ public class Node {
 			this.player = this.currentPlayer();
 			this.opponent = this.opponentPlayer();
 			this.cutoff = cutoff;
-			// For a 3-in-a-row win condition, maxHRank = 16 and maxRank = 20.
 			
 		}
 		
@@ -53,13 +52,26 @@ public class Node {
 				this.rank = 0;
 		}
 		
-		public HashSet<Point> nextMoves() {
+		public HashSet<Point> nextMoves(boolean gravity) {
 			HashSet<Point> moves = new HashSet<Point>();
 			
-			for (int x = 0; x < this.state.getWidth(); ++x) {
-				for (int y = 0; y < this.state.getHeight(); ++y) {
-					if (this.state.getSpace(x,y) == 0) {
-						moves.add(new Point(x,y));
+			if (gravity) {
+				for (int x = 0; x < this.state.getWidth(); x++) {
+					for (int y = 0; y < this.state.getHeight(); y++) {
+						if (this.state.getSpace(x,y) == 0) {
+							moves.add(new Point(x,y));
+							break;
+						}
+					}
+				}
+			}
+			
+			else {
+				for (int x = 0; x < this.state.getWidth(); ++x) {
+					for (int y = 0; y < this.state.getHeight(); ++y) {
+						if (this.state.getSpace(x,y) == 0) {
+							moves.add(new Point(x,y));
+						}
 					}
 				}
 			}
@@ -228,6 +240,10 @@ public class Node {
 
 		public static void incNodeCount(int n) {
 			Node.nodeCount += n;
+		}
+		
+		public static void resetNodeCount() {
+			Node.nodeCount = 0;
 		}
 		
 		public int getPlayer() {

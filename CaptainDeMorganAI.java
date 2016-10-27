@@ -3,9 +3,14 @@ import connectK.BoardModel;
 import java.awt.Point;
 import java.util.Random;
 import java.util.HashSet;
+import java.util.Scanner;
 
 public class CaptainDeMorganAI extends CKPlayer {
-	private int cutOff = 4;
+	private int cutOff = 6;
+	private int alpha = Integer.MIN_VALUE; // eventually becomes the largest value along Max's path
+	private int beta = Integer.MAX_VALUE; // eventually becomes the smallest value along Min's path
+	private int maxNodes = Integer.MAX_VALUE;
+	private Scanner input = new Scanner(System.in);
 	
 	// CaptainDeMorgainAI's arg constructor calls CKPlayer's arg constructor
 	public CaptainDeMorganAI(byte player, BoardModel state) {
@@ -15,10 +20,21 @@ public class CaptainDeMorganAI extends CKPlayer {
 	
 	@Override
 	public Point getMove(BoardModel state) {
-		int initDepth = this.depth(state);
-		Node n = new Node(state, initDepth, null, this.cutOff);
+		Node n = new Node(state, 0, null, this.cutOff);
+		Point move = this.minimax(n, this.alpha, this.beta).getMove(); // initialized to null if AI is player 1 making the first move
 		
-		Point move = this.minimax(n).getMove(); // initialized to null if AI is player 1 making the first move
+		int nodes = Node.getNodeCount();
+		System.out.println("Total Nodes Computed:" + nodes);
+		
+		if (nodes > maxNodes) {
+			System.out.println("Node.getNodeCount() > maxNodes: " + move);
+			input.nextLine();
+		}
+		else {
+			maxNodes = nodes;
+			Node.resetNodeCount();
+		}
+		
 		return move;
 	}
 
@@ -27,61 +43,35 @@ public class CaptainDeMorganAI extends CKPlayer {
 		return getMove(state);
 	}
 	
-	public int depth(BoardModel state) {
-		int depth = 0;
-		for (int x = 0; x < state.getWidth(); ++x) {
-			for (int y = 0; y < state.getHeight(); ++y) {
-				if (state.getSpace(x, y) != 0)
-					++depth;
-			}
-		}
-		return depth;
-	}
-	
-	private Node minimax(Node n) {
+	private Node minimax(Node n, int alpha, int beta) {
 //		gravity on: branching factor = width
 //		gravity off: branching factor = width * height
 
-		HashSet<Point> nextMoves = n.nextMoves(); // modify nextMoves() to create separate sets of points for gravity on/off
-//		Node.incNodeCount(nextMoves.size());
-		
+		HashSet<Point> nextMoves = n.nextMoves(n.getState().gravityEnabled());
 		
 		int bestRank = Integer.MIN_VALUE;
 		Node bestNode = null;
 		
-		// first move of the game
-		if (n.getDepth() == 0) {
-			Random rand = new Random();
-			int x = rand.nextInt(n.getState().getWidth());
-			int y = rand.nextInt(n.getState().getHeight());
-			Point p = new Point(x,y);
+		for (Point p : nextMoves) {
+			Node nextNode = new Node(n.nextState(p), n.getDepth()+1, p, n.getCutoff()); // currently at depth = 1; lastMove() returns 2
+			Node.incNodeCount(1);
+			int rank = this.min(nextNode, nextNode.getDepth(), alpha, beta).getRank();
 			
-			bestNode = new Node(n.nextState(p), n.getDepth()+1, p, n.getCutoff()); // set rank?
-		}
-		
-		else {
-			for (Point p : nextMoves) {
-	//			System.out.println("Last Move: " + n.getState().getSpace(n.getState().getLastMove()));
-				Node nextNode = new Node(n.nextState(p), n.getDepth()+1, p, n.getCutoff()); // currently at depth = 1; lastMove() returns 2
-				
-				int rank = this.min(nextNode, nextNode.getDepth()).getRank();
-	//			System.out.println("-------------------------");
-	//			System.out.println("player: " + nextNode.getPlayer() + " opponent: " + nextNode.getOpponent());
-	//			System.out.println(nextNode.getState().toString() + "Rank: " + rank);
-	//			System.out.println("-------------------------");
-				
-				if (rank > bestRank) {
-					bestRank = rank;
-					bestNode = nextNode;
-				}
+			if (rank > alpha)
+				alpha = rank;
+			
+			if (rank > bestRank) {
+				bestRank = rank;
+				bestNode = nextNode;
 			}
 		}
 		bestNode.setRank(bestRank);
 		return bestNode;
 		
 	}
+	
 		
-	private Node min(Node n, int depth) {
+	private Node min(Node n, int depth, int alpha, int beta) {
 		// minimize player 1
 
 		if (n.getState().winner() != -1) { // base case 1: no more available moves
@@ -94,19 +84,25 @@ public class CaptainDeMorganAI extends CKPlayer {
 			return n;
 		}
 		
-		HashSet<Point> nextMoves = n.nextMoves();
+		HashSet<Point> nextMoves = n.nextMoves(n.getState().gravityEnabled());
 		int bestRank = Integer.MAX_VALUE;
 		Node bestNode = null;
 		
 		for (Point p : nextMoves) {
 			Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
+			Node.incNodeCount(1);
+			int rank = max(nextNode, nextNode.getDepth(), alpha, beta).getRank();
 			
-			int rank = max(nextNode, nextNode.getDepth()).getRank();
+			if (rank < beta)
+				beta = rank;
 			
 			if (rank < bestRank) {
 				bestRank = rank;
 				bestNode = nextNode;
 			}
+			
+			if (alpha >= beta)
+				break;
 		}
 				
 		bestNode.setRank(bestRank);
@@ -114,7 +110,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 	}
 
 
-	private Node max(Node n, int depth) {
+	private Node max(Node n, int depth, int alpha, int beta) {
 		// maximize player 2
 		if (n.getState().winner() != -1) { // base case 1
 			n.evalGame();
@@ -126,19 +122,25 @@ public class CaptainDeMorganAI extends CKPlayer {
 			return n;
 		}
 		
-		HashSet<Point> nextMoves = n.nextMoves();
+		HashSet<Point> nextMoves = n.nextMoves(n.getState().gravityEnabled());
 		int bestRank = Integer.MIN_VALUE;
 		Node bestNode = null;
 		
 		for (Point p : nextMoves) {
 			Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
+			Node.incNodeCount(1);
+			int rank = min(nextNode, nextNode.getDepth(), alpha, beta).getRank();
 			
-			int rank = min(nextNode, nextNode.getDepth()).getRank();
+			if (rank > alpha)
+				alpha = rank;
 			
 			if (rank > bestRank) {
 				bestRank = rank;
 				bestNode = nextNode;
 			}
+			
+			if (alpha >= beta)
+				break;
 
 		}
 		
