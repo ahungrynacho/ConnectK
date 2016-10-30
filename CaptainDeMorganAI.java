@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Scanner;
 
 public class CaptainDeMorganAI extends CKPlayer {
-	private int cutOff = 6;
+	private int cutOff = 5;
 	private int alpha = Integer.MIN_VALUE; // eventually becomes the largest value along Max's path
 	private int beta = Integer.MAX_VALUE; // eventually becomes the smallest value along Min's path
 	private int maxNodes = Integer.MAX_VALUE;
@@ -25,15 +25,16 @@ public class CaptainDeMorganAI extends CKPlayer {
 		
 		int nodes = Node.getNodeCount();
 		System.out.println("Total Nodes Computed:" + nodes);
+		Node.resetNodeCount();
 		
-		if (nodes > maxNodes) {
-			System.out.println("Node.getNodeCount() > maxNodes: " + move);
-			input.nextLine();
-		}
-		else {
-			maxNodes = nodes;
-			Node.resetNodeCount();
-		}
+//		if (nodes > maxNodes) {
+//			System.out.println("Node.getNodeCount() > maxNodes: " + move);
+//			input.nextLine();
+//		}
+//		else {
+//			maxNodes = nodes;
+//			Node.resetNodeCount();
+//		}
 		
 		return move;
 	}
@@ -48,6 +49,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 //		gravity off: branching factor = width * height
 
 		HashSet<Point> nextMoves = n.nextMoves(n.getState().gravityEnabled());
+//		System.out.println("Number of Next Moves: " + nextMoves.size());
 		
 		int bestRank = Integer.MIN_VALUE;
 		Node bestNode = null;
@@ -56,6 +58,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 			Node nextNode = new Node(n.nextState(p), n.getDepth()+1, p, n.getCutoff()); // currently at depth = 1; lastMove() returns 2
 			Node.incNodeCount(1);
 			int rank = this.min(nextNode, nextNode.getDepth(), alpha, beta).getRank();
+//			System.out.println("Alpha: " + alpha + " Beta: " + beta);
 			
 			if (rank > alpha)
 				alpha = rank;
@@ -64,6 +67,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 				bestRank = rank;
 				bestNode = nextNode;
 			}
+
 		}
 		bestNode.setRank(bestRank);
 		return bestNode;

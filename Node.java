@@ -1,3 +1,4 @@
+
 import java.awt.Point;
 import java.util.HashSet;
 import connectK.BoardModel;
