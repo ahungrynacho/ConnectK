@@ -54,12 +54,12 @@ public class Node implements Comparable<Node>{
 		
 		public void evalGame() {
 			byte winner = this.state.winner();
-			
+		
 			// this part works
 			if (winner == 1)
-				this.rank = Integer.MIN_VALUE;
+				this.rank = Integer.MIN_VALUE + 1;
 			else if (winner == 2)
-				this.rank = Integer.MAX_VALUE;
+				this.rank = Integer.MAX_VALUE - 1;
 			else if (winner == 0)
 				this.rank = 0;
 		}
@@ -98,21 +98,17 @@ public class Node implements Comparable<Node>{
 
 		}
 				
-		public int heuristic() {
-			int rank = 0;
-			for (int x = 0; x < this.state.getWidth(); x++) {
-				for (int y = 0; y < this.state.getHeight(); y++) {
-					if (this.state.getSpace(x, y) == this.getPlayer()) {
-						rank += checkEightDirections(new Point(x,y));
-					}
-				}
-			}
-			return rank;
-		}
-		
-		private boolean isStreak(int s) {
-			return s == this.state.getkLength();
-		}
+		public int heuristic(Point p) {
+//			int rank = 0;
+//			for (int x = 0; x < this.state.getWidth(); x++) {
+//				for (int y = 0; y < this.state.getHeight(); y++) {
+//					if (this.state.getSpace(x, y) == this.getPlayer()) {
+//						rank += checkEightDirections(new Point(x,y));
+//					}
+//				}
+//			}
+			return this.checkEightDirections(p);
+		}		
 	
 		public int checkEightDirections(Point p) {
 			// number-of-possible-wins heuristic
@@ -123,126 +119,106 @@ public class Node implements Comparable<Node>{
 			int hRank = 0;
 
 			// top to bottom
-			int streak = 0;
 			for (int x = p.x; x < this.state.getWidth(); x++) {
-				if (streak >= this.state.getkLength() || this.state.getSpace(x, p.y) == this.opponent)
+				if (this.state.getSpace(x, p.y) == this.opponent)
 					break;
-				else {// if (this.state.getSpace(x, p.y) == 0 or == this.player
-					streak++;
-				}
+				else if (this.state.getSpace(x, p.y) == 0)
+					hRank += 1;
+				else if (this.state.getSpace(x, p.y) == this.player)
+					hRank += 2;
 			}
-			if (this.isStreak(streak))
-				hRank++;
-				
-			streak = 0;
-			
+	
 			// bottom to top
 			for (int x = p.x; x >= 0; x--) {
-				if (streak >= this.state.getkLength() || this.state.getSpace(x, p.y) == this.opponent)
+				if (this.state.getSpace(x, p.y) == this.opponent)
 					break;
-				else {// if (this.state.getSpace(x, p.y) == 0 or == this.player
-					streak++;
-				}
+				else if (this.state.getSpace(x, p.y) == 0)
+					hRank += 1;
+				else if (this.state.getSpace(x, p.y) == this.player)
+					hRank += 2;
 			}
-			if (this.isStreak(streak))
-				hRank++;
-			streak = 0;
 			
 			// left to right
 			for (int y = p.y; y < this.state.getHeight(); y++) {
-				if (streak >= this.state.getkLength() || this.state.getSpace(p.x, y) == this.opponent)
+				if (this.state.getSpace(p.x, y) == this.opponent)
 					break;
-				else {// if (this.state.getSpace(x, p.y) == 0 or == this.player
-					streak++;
-				}
+				else if (this.state.getSpace(p.x, y) == 0)
+					hRank += 1;
+				else if (this.state.getSpace(p.x, y) == this.player)
+					hRank += 2;
 			}
-			if (this.isStreak(streak))
-				hRank++;
-			streak = 0;
 			
 			// right to left
 			for (int y = p.y; y >= 0; y--) {
-				if (streak >= this.state.getkLength() || this.state.getSpace(p.x, y) == this.opponent)
+				if (this.state.getSpace(p.x, y) == this.opponent)
 					break;
-				else {// if (this.state.getSpace(x, p.y) == 0 or == this.player
-					streak++;
-				}
+				else if (this.state.getSpace(p.x, y) == 0)
+					hRank += 1;
+				else if (this.state.getSpace(p.x, y) == this.player)
+					hRank += 2;
 			}
-			
-			if (this.isStreak(streak))
-				hRank++;
-			streak = 0;
 			
 			// upper-right
 			try {
 				
 				int y = p.y;
 				for (int x = p.x; x >= 0; x--) {
-					if (streak >= this.state.getkLength() || this.state.getSpace(x, y) == this.opponent)
+					if (this.state.getSpace(x, y) == this.opponent)
 						break;
-					else { // if (this.state.getSpace(x, p.y) == 0 or == this.player
-						streak++;
-						y++;
-					}
+					else if (this.state.getSpace(x, y) == 0)
+						hRank += 1;
+					else if (this.state.getSpace(x, y) == this.player)
+						hRank += 2;
+					y++;
+
 				}
 			} catch (IndexOutOfBoundsException e) {}
-			
-			if (this.isStreak(streak))
-				hRank++;
-			streak = 0;
 			
 			// lower-left
 			try {
+				
 				int y = p.y;
 				for (int x = p.x; x < this.state.getWidth(); x++) {
-					if (streak >= this.state.getkLength() || this.state.getSpace(x, y) == this.opponent)
+					if (this.state.getSpace(x, y) == this.opponent)
 						break;
-					else { // if (this.state.getSpace(x, p.y) == 0 or == this.player
-						streak++;
-						y--;
-					}
+					else if (this.state.getSpace(x ,y) == 0)
+						hRank += 1;
+					else if (this.state.getSpace(x, y) == this.player)
+						hRank += 2;
+					y--;
 				}
 			} catch (IndexOutOfBoundsException e) {}
-			
-			if (this.isStreak(streak))
-				hRank++;
-			streak = 0;
 			
 			// upper-left
 			try {
 				int y = p.y;
 				for (int x = p.x; x >= 0; x--) {
-					if (streak >= this.state.getkLength() || this.state.getSpace(x, y) == this.opponent)
+					if (this.state.getSpace(x, y) == this.opponent)
 						break;
-					else { // if (this.state.getSpace(x, p.y) == 0 or == this.player
-						streak++;
-						y--;
-					}
+					else if (this.state.getSpace(x, y) == 0)
+						hRank += 1;
+					else if (this.state.getSpace(x, y) == this.player)
+						hRank += 2;
+					y--;
 				}
 			} catch (IndexOutOfBoundsException e) {}
 			
-			if (this.isStreak(streak))
-				hRank++;
-			streak = 0;
 		
 			// lower-right
 			try {	
 				
 				int y = p.y;
 				for (int x = p.x; x < this.state.getWidth(); x++) {
-					if (streak >= this.state.getkLength() || this.state.getSpace(x, y) == this.opponent)
+					if (this.state.getSpace(x, y) == this.opponent)
 						break;
-					else { // if (this.state.getSpace(x, p.y) == 0 or == this.player
-						streak++;
-						y++;
-					}
+					else if (this.state.getSpace(x, y) == 0)
+						hRank += 1;
+					else if (this.state.getSpace(x, y) == this.player)
+						hRank += 2;
+					y++;
 				}
 			} catch (IndexOutOfBoundsException e) {}
-			
-			if (this.isStreak(streak))
-				hRank++;
-			streak = 0;
-			
+					
 			return hRank;
 		}
 		

@@ -72,13 +72,14 @@ public class CaptainDeMorganAI extends CKPlayer {
 			int rank = this.min(nextNode, nextNode.getDepth(), alpha, beta).getRank();
 //			System.out.println("Alpha: " + alpha + " Beta: " + beta);
 			
-			if (rank > alpha)
-				alpha = rank;
-			
 			if (rank > bestRank) {
 				bestRank = rank;
 				bestNode = nextNode;
 			}
+			
+			if (rank > alpha)
+				alpha = rank;
+
 
 		}
 		bestNode.setRank(bestRank);
@@ -95,53 +96,46 @@ public class CaptainDeMorganAI extends CKPlayer {
 			return n;
 		}
 		
-		// Sort the last depth in ascending order.
-//		if (n.getDepth() + 1 == n.getCutoff()) {
-//			HashSet<Point> nextMoves = n.nextMoves(n.getState().gravityEnabled());
-//			ArrayList<Node> nextStates = new ArrayList<Node>();
-//
-//			for (Point p : nextMoves) {
-//				Node temp = new Node(n.nextState(p), depth+1, p, n.getCutoff());
-//				temp.setRank(temp.heuristic(p));
-//				nextStates.add(temp);
-//				Node.incNodeCount();
-//				
-//				if (temp.getState().winner() != -1) {
-//					temp.evalGame();
-//					return temp;
-//				}
-//			}
-//			Collections.sort(nextStates);
-//			return nextStates.get(0);
-//		}
-		
 		if (n.getDepth() >= n.getCutoff()) { // base case 2: depth cut-off reached so rank current state with the heuristic function
-			n.setRank(-n.heuristic()); // negative heuristic value
+			n.setRank(-n.heuristic(n.getMove())); // negative heuristic value
 			return n;
 		}
 		
 		HashSet<Point> nextMoves = n.nextMoves(n.getState().gravityEnabled());
 		int bestRank = Integer.MAX_VALUE;
 		Node bestNode = null;
+		ArrayList<Node> leafNodes = new ArrayList<Node>();
 		
 		for (Point p : nextMoves) {
-			Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
 			Node.incNodeCount();
-			int rank = max(nextNode, nextNode.getDepth(), alpha, beta).getRank();
-			
-			if (rank < beta)
-				beta = rank;
-			
-			if (rank < bestRank) {
-				bestRank = rank;
-				bestNode = nextNode;
+			if (depth+1 == n.getCutoff()) {
+				Node node = new Node(n.nextState(p), depth+1, p, n.getCutoff());
+				node.setRank(-node.heuristic(p));
+				leafNodes.add(node);
+				
 			}
-			
-			if (alpha >= beta)
-				break;
+			else {
+				Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
+				int rank = max(nextNode, nextNode.getDepth(), alpha, beta).getRank();
+	
+				if (rank < bestRank) {
+					bestRank = rank;
+					bestNode = nextNode;
+				}
+				
+				if (rank < beta)
+					beta = rank;			
+				if (alpha >= beta)
+					break;
+			}
 		}
 				
-		bestNode.setRank(bestRank);
+		if (depth+1 == n.getCutoff()) {
+			Collections.sort(leafNodes);
+			bestNode = leafNodes.get(0);
+		}
+		else
+			bestNode.setRank(bestRank);
 		return bestNode;
 	}
 
@@ -152,54 +146,48 @@ public class CaptainDeMorganAI extends CKPlayer {
 			return n;
 		}
 		
-		// Sort the last depth in descending order.
-//		if (n.getDepth() + 1 == n.getCutoff()) {
-//			HashSet<Point> nextMoves = n.nextMoves(n.getState().gravityEnabled());
-//			ArrayList<Node> nextStates = new ArrayList<Node>();
-//
-//			for (Point p : nextMoves) {
-//				Node temp = new Node(n.nextState(p), depth+1, p, n.getCutoff());
-//				temp.setRank(temp.heuristic(p));
-//				nextStates.add(temp);
-//				Node.incNodeCount();
-//				
-//				if (temp.getState().winner() != -1) {
-//					temp.evalGame();
-//					return temp;
-//				}
-//			}
-//			Collections.sort(nextStates, Collections.reverseOrder());
-//			return nextStates.get(0);
-//		}
-		
 		if (n.getDepth() >= n.getCutoff()) { // base case 2: depth cut-off reached so rank current state with the heuristic function
-			n.setRank(n.heuristic()); // positive heuristic value
+			n.setRank(n.heuristic(n.getMove())); // positive heuristic value
 			return n;
 		}
 		
 		HashSet<Point> nextMoves = n.nextMoves(n.getState().gravityEnabled());
 		int bestRank = Integer.MIN_VALUE;
 		Node bestNode = null;
+		ArrayList<Node> leafNodes = new ArrayList<Node>();
 		
 		for (Point p : nextMoves) {
-			Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
 			Node.incNodeCount();
-			int rank = min(nextNode, nextNode.getDepth(), alpha, beta).getRank();
-			
-			if (rank > alpha)
-				alpha = rank;
-			
-			if (rank > bestRank) {
-				bestRank = rank;
-				bestNode = nextNode;
+			if (depth+1 == n.getCutoff()) {
+				Node node = new Node(n.nextState(p), depth+1, p, n.getCutoff());
+				node.setRank(node.heuristic(p));
+				leafNodes.add(node);
+				
 			}
+			else {
+				Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
+				int rank = min(nextNode, nextNode.getDepth(), alpha, beta).getRank();
 			
-			if (alpha >= beta)
-				break;
+				if (rank > bestRank) {
+					bestRank = rank;
+					bestNode = nextNode;
+				}
+				
+				if (rank > alpha)
+					alpha = rank;
+				
+				if (alpha >= beta)
+					break;
+			}
 
 		}
 		
-		bestNode.setRank(bestRank);
+		if (depth+1 == n.getCutoff()) {
+			Collections.sort(leafNodes, Collections.reverseOrder());
+			bestNode = leafNodes.get(0);
+		}
+		else
+			bestNode.setRank(bestRank);
 		return bestNode;
 	}
 		
