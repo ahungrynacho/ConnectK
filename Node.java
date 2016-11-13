@@ -1,9 +1,10 @@
 
 import java.awt.Point;
+import java.util.Comparator;
 import java.util.HashSet;
 import connectK.BoardModel;
 
-public class Node {
+public class Node implements Comparable<Node>{
 		private int rank;
 		private int depth;
 		private BoardModel state;
@@ -21,6 +22,16 @@ public class Node {
 			this.opponent = this.opponentPlayer();
 			this.cutoff = cutoff;
 			
+		}
+		
+		@Override
+		public int compareTo(Node n) {
+			if (this.rank < n.getRank())
+				return -1;
+			else if (this.rank == n.getRank())
+				return 0;
+			else
+				return 1;
 		}
 		
 		private int opponentPlayer() {
@@ -46,9 +57,9 @@ public class Node {
 			
 			// this part works
 			if (winner == 1)
-				this.rank = -10;
+				this.rank = Integer.MIN_VALUE;
 			else if (winner == 2)
-				this.rank = 10;
+				this.rank = Integer.MAX_VALUE;
 			else if (winner == 0)
 				this.rank = 0;
 		}
@@ -86,33 +97,43 @@ public class Node {
 			return nextState.placePiece(move, (byte) this.player);
 
 		}
+				
+		public int heuristic() {
+			int rank = 0;
+			for (int x = 0; x < this.state.getWidth(); x++) {
+				for (int y = 0; y < this.state.getHeight(); y++) {
+					if (this.state.getSpace(x, y) == this.getPlayer()) {
+						rank += checkEightDirections(new Point(x,y));
+					}
+				}
+			}
+			return rank;
+		}
 		
 		private boolean isStreak(int s) {
 			return s == this.state.getkLength();
 		}
-		
-		private boolean isDirStreak(int s) {
-			return (s-1) == this.state.getkLength();
-		}
-		
-		public int heuristic(Point p) {
-			// direct-adjacent heuristic
+	
+		public int checkEightDirections(Point p) {
+			// number-of-possible-wins heuristic
 			// consider passing heuristic() into the constructor as an argument (lambda in J8 an or interface in J7)
+			// By definition, a heuristic always underestimates the actual cost to a goal node.
+			// minimizer: -10 < h(n) <= 0
+			// maximizer: 0 <= h(n) < 10
 			int hRank = 0;
 
 			// top to bottom
-			int verticalStreak = 0;
 			int streak = 0;
 			for (int x = p.x; x < this.state.getWidth(); x++) {
 				if (streak >= this.state.getkLength() || this.state.getSpace(x, p.y) == this.opponent)
 					break;
 				else {// if (this.state.getSpace(x, p.y) == 0 or == this.player
 					streak++;
-					verticalStreak++;
 				}
 			}
 			if (this.isStreak(streak))
 				hRank++;
+				
 			streak = 0;
 			
 			// bottom to top
@@ -121,21 +142,18 @@ public class Node {
 					break;
 				else {// if (this.state.getSpace(x, p.y) == 0 or == this.player
 					streak++;
-					verticalStreak++;
 				}
 			}
-			if (this.isStreak(streak) || this.isDirStreak(verticalStreak))
+			if (this.isStreak(streak))
 				hRank++;
 			streak = 0;
 			
 			// left to right
-			int horizontalStreak = 0;
 			for (int y = p.y; y < this.state.getHeight(); y++) {
 				if (streak >= this.state.getkLength() || this.state.getSpace(p.x, y) == this.opponent)
 					break;
 				else {// if (this.state.getSpace(x, p.y) == 0 or == this.player
 					streak++;
-					horizontalStreak++;
 				}
 			}
 			if (this.isStreak(streak))
@@ -148,16 +166,14 @@ public class Node {
 					break;
 				else {// if (this.state.getSpace(x, p.y) == 0 or == this.player
 					streak++;
-					horizontalStreak++;
 				}
 			}
 			
-			if (this.isStreak(streak) || this.isDirStreak(horizontalStreak))
+			if (this.isStreak(streak))
 				hRank++;
 			streak = 0;
 			
 			// upper-right
-			int diagUpStreak = 0;
 			try {
 				
 				int y = p.y;
@@ -166,7 +182,6 @@ public class Node {
 						break;
 					else { // if (this.state.getSpace(x, p.y) == 0 or == this.player
 						streak++;
-						diagUpStreak++;
 						y++;
 					}
 				}
@@ -184,18 +199,16 @@ public class Node {
 						break;
 					else { // if (this.state.getSpace(x, p.y) == 0 or == this.player
 						streak++;
-						diagUpStreak++;
 						y--;
 					}
 				}
 			} catch (IndexOutOfBoundsException e) {}
 			
-			if (this.isStreak(streak) || this.isDirStreak(diagUpStreak))
+			if (this.isStreak(streak))
 				hRank++;
 			streak = 0;
 			
 			// upper-left
-			int diagDownStreak = 0;
 			try {
 				int y = p.y;
 				for (int x = p.x; x >= 0; x--) {
@@ -203,7 +216,6 @@ public class Node {
 						break;
 					else { // if (this.state.getSpace(x, p.y) == 0 or == this.player
 						streak++;
-						diagDownStreak++;
 						y--;
 					}
 				}
@@ -222,13 +234,12 @@ public class Node {
 						break;
 					else { // if (this.state.getSpace(x, p.y) == 0 or == this.player
 						streak++;
-						diagDownStreak++;
 						y++;
 					}
 				}
 			} catch (IndexOutOfBoundsException e) {}
 			
-			if (this.isStreak(streak) || this.isDirStreak(diagDownStreak))
+			if (this.isStreak(streak))
 				hRank++;
 			streak = 0;
 			
@@ -239,8 +250,8 @@ public class Node {
 			return nodeCount;
 		}
 
-		public static void incNodeCount(int n) {
-			Node.nodeCount += n;
+		public static void incNodeCount() {
+			Node.nodeCount++;
 		}
 		
 		public static void resetNodeCount() {
@@ -286,15 +297,21 @@ public class Node {
 		public void setRank(int r) {
 			this.rank = r;
 		}
+
+
+
+
+
+
 		
 //		public static void main(String[] args) {
-//			BoardModel board = new BoardModel(3, 3, 2, false);
-////			board = board.placePiece(new Point(0,2), (byte) 1);
-////			board = board.placePiece(new Point(0,1), (byte) 2);
+//			BoardModel board = new BoardModel(3, 3, 3, false);
+//			board = board.placePiece(new Point(1,1), (byte) 1);
+//			board = board.placePiece(new Point(0,1), (byte) 2);
 ////			board = board.placePiece(new Point(1,0), (byte) 2);
 ////			board = board.placePiece(new Point(2,0), (byte) 2);
 ////			board = board.placePiece(new Point(2,1), (byte) 1);
-////			board = board.placePiece(new Point(0,0), (byte) 1);
+////			board = board.placePiece(new Point(2,2), (byte) 1);
 //
 ////			board.placePiece(new Point(2,2), (byte) 1);
 //			
@@ -302,7 +319,8 @@ public class Node {
 //			
 //			System.out.println("Current player:" + n.getPlayer());
 //			System.out.println(n.getState().toString());
-//			System.out.println(-n.heuristic(new Point(1,1)));
+//			System.out.println(n.heuristic());
+//			System.out.println(n.getState().toString());
 //			
 //		}
 	}

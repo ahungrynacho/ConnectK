@@ -2,6 +2,8 @@ import connectK.CKPlayer;
 import connectK.BoardModel;
 import java.awt.Point;
 import java.util.Random;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Scanner;
 
@@ -11,6 +13,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 	private int beta = Integer.MAX_VALUE; // eventually becomes the smallest value along Min's path
 	private int maxNodes = Integer.MAX_VALUE;
 	private Scanner input = new Scanner(System.in);
+	private ArrayList<Point> edgeCases = new ArrayList<Point>();
 	
 	// CaptainDeMorgainAI's arg constructor calls CKPlayer's arg constructor
 	public CaptainDeMorganAI(byte player, BoardModel state) {
@@ -20,21 +23,30 @@ public class CaptainDeMorganAI extends CKPlayer {
 	
 	@Override
 	public Point getMove(BoardModel state) {
-		Node n = new Node(state, 0, null, this.cutOff);
-		Point move = this.minimax(n, this.alpha, this.beta).getMove(); // initialized to null if AI is player 1 making the first move
+		
+		Point move = null;
+//		for (int d = 3; d < 5; d++) {
+			long start = System.currentTimeMillis();
+			Node bestNode = this.minimax(new Node(state, 0, null, this.cutOff), this.alpha, this.beta);
+//			if (System.currentTimeMillis() - start > 8000) {
+				move = bestNode.getMove();
+//				break;
+//			}
+//		}
+		
 		
 		int nodes = Node.getNodeCount();
 		System.out.println("Total Nodes Computed:" + nodes);
 		Node.resetNodeCount();
 		
-//		if (nodes > maxNodes) {
-//			System.out.println("Node.getNodeCount() > maxNodes: " + move);
-//			input.nextLine();
-//		}
-//		else {
-//			maxNodes = nodes;
-//			Node.resetNodeCount();
-//		}
+		// might need to adjust the heuristic
+		if (nodes > maxNodes) {
+			edgeCases.add(move);
+			for (Point p : edgeCases) {
+				System.out.println("Node.getNodeCount() > maxNodes: " + p);
+			}
+		}
+		maxNodes = nodes;
 		
 		return move;
 	}
@@ -56,7 +68,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 		
 		for (Point p : nextMoves) {
 			Node nextNode = new Node(n.nextState(p), n.getDepth()+1, p, n.getCutoff()); // currently at depth = 1; lastMove() returns 2
-			Node.incNodeCount(1);
+			Node.incNodeCount();
 			int rank = this.min(nextNode, nextNode.getDepth(), alpha, beta).getRank();
 //			System.out.println("Alpha: " + alpha + " Beta: " + beta);
 			
@@ -83,8 +95,28 @@ public class CaptainDeMorganAI extends CKPlayer {
 			return n;
 		}
 		
+		// Sort the last depth in ascending order.
+//		if (n.getDepth() + 1 == n.getCutoff()) {
+//			HashSet<Point> nextMoves = n.nextMoves(n.getState().gravityEnabled());
+//			ArrayList<Node> nextStates = new ArrayList<Node>();
+//
+//			for (Point p : nextMoves) {
+//				Node temp = new Node(n.nextState(p), depth+1, p, n.getCutoff());
+//				temp.setRank(temp.heuristic(p));
+//				nextStates.add(temp);
+//				Node.incNodeCount();
+//				
+//				if (temp.getState().winner() != -1) {
+//					temp.evalGame();
+//					return temp;
+//				}
+//			}
+//			Collections.sort(nextStates);
+//			return nextStates.get(0);
+//		}
+		
 		if (n.getDepth() >= n.getCutoff()) { // base case 2: depth cut-off reached so rank current state with the heuristic function
-			n.setRank(-n.heuristic(n.getMove())); // negative heuristic value
+			n.setRank(-n.heuristic()); // negative heuristic value
 			return n;
 		}
 		
@@ -94,7 +126,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 		
 		for (Point p : nextMoves) {
 			Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
-			Node.incNodeCount(1);
+			Node.incNodeCount();
 			int rank = max(nextNode, nextNode.getDepth(), alpha, beta).getRank();
 			
 			if (rank < beta)
@@ -113,7 +145,6 @@ public class CaptainDeMorganAI extends CKPlayer {
 		return bestNode;
 	}
 
-
 	private Node max(Node n, int depth, int alpha, int beta) {
 		// maximize player 2
 		if (n.getState().winner() != -1) { // base case 1
@@ -121,8 +152,28 @@ public class CaptainDeMorganAI extends CKPlayer {
 			return n;
 		}
 		
+		// Sort the last depth in descending order.
+//		if (n.getDepth() + 1 == n.getCutoff()) {
+//			HashSet<Point> nextMoves = n.nextMoves(n.getState().gravityEnabled());
+//			ArrayList<Node> nextStates = new ArrayList<Node>();
+//
+//			for (Point p : nextMoves) {
+//				Node temp = new Node(n.nextState(p), depth+1, p, n.getCutoff());
+//				temp.setRank(temp.heuristic(p));
+//				nextStates.add(temp);
+//				Node.incNodeCount();
+//				
+//				if (temp.getState().winner() != -1) {
+//					temp.evalGame();
+//					return temp;
+//				}
+//			}
+//			Collections.sort(nextStates, Collections.reverseOrder());
+//			return nextStates.get(0);
+//		}
+		
 		if (n.getDepth() >= n.getCutoff()) { // base case 2: depth cut-off reached so rank current state with the heuristic function
-			n.setRank(n.heuristic(n.getMove())); // positive heuristic value
+			n.setRank(n.heuristic()); // positive heuristic value
 			return n;
 		}
 		
@@ -132,7 +183,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 		
 		for (Point p : nextMoves) {
 			Node nextNode = new Node(n.nextState(p), depth+1, p, n.getCutoff());
-			Node.incNodeCount(1);
+			Node.incNodeCount();
 			int rank = min(nextNode, nextNode.getDepth(), alpha, beta).getRank();
 			
 			if (rank > alpha)
