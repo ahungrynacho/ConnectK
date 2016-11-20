@@ -3,6 +3,8 @@ import java.util.HashSet;
 import connectK.BoardModel;
 
 public class Node {
+		private int MAX_RANK = Integer.MAX_VALUE - 1;
+		private int MIN_RANK = Integer.MIN_VALUE + 1;
 		private int rank;
 		private int depth;
 		private BoardModel state;
@@ -46,9 +48,9 @@ public class Node {
 			byte winner = state.winner();
 		
 			if (winner == opponent)
-				rank = Integer.MIN_VALUE + 1;
+				rank = MIN_RANK;
 			else if (winner == player)
-				rank = Integer.MAX_VALUE - 1;
+				rank = MAX_RANK;
 			else if (winner == 0)
 				rank = 0;
 		}
@@ -99,7 +101,8 @@ public class Node {
 				}
 			}
 			return sum;
-		}		
+		}
+		
 	
 		public int checkEightDirections(Point p) {
 			// Summing the player's pieces within k spaces of P
@@ -107,58 +110,95 @@ public class Node {
 			int pieceRank = 10;
 			int emptyRank = 1;
 			int hRank = -(emptyRank * 8) + pieceRank; // to account for over-counting 
+			int contOpponent = 0;
 			
-
 			// top to bottom
 //			System.out.println("top to bottom");
 			for (int x = p.x, k = 0; x < state.getWidth(); x++, k++) {
-				if (state.getSpace(x, p.y) == opponent || k == state.getkLength())
+				if (contOpponent == (state.getkLength() - 1))
+					return MAX_RANK;
+				else if (k == state.getkLength())
 					break;
-				else if (state.getSpace(x, p.y) == 0)
+				else if (state.getSpace(x, p.y) == opponent ) {
+					contOpponent += 1;
+				}
+				else if (state.getSpace(x, p.y) == 0) {
 					hRank += emptyRank;
-				else if (state.getSpace(x, p.y) == player)
+					contOpponent = 0;
+				}
+				else if (state.getSpace(x, p.y) == player) {
 					hRank += pieceRank;
+					contOpponent = 0;
+				}
 //				System.out.print("(" + x + "," + p.y + ")");
 			}
+			contOpponent = 0;
 //			System.out.println();
 			
 			// bottom to top
 //			System.out.println("bottom to top");
 			for (int x = p.x, k = 0; x >= 0; x--, k++) {
-				if (state.getSpace(x, p.y) == opponent || k == state.getkLength())
+				if (contOpponent == (state.getkLength()) - 1)
+					return MAX_RANK;
+				else if (state.getSpace(x, p.y) == opponent)
+					contOpponent += 1;
+				else if (k == state.getkLength())
 					break;
-				else if (state.getSpace(x, p.y) == 0)
+				else if (state.getSpace(x, p.y) == 0) {
 					hRank += emptyRank;
-				else if (state.getSpace(x, p.y) == player)
+					contOpponent = 0;
+				}
+				else if (state.getSpace(x, p.y) == player) {
 					hRank += pieceRank;
+					contOpponent = 0;
+				}
 //				System.out.print("(" + x + "," + p.y + ")");
 			}
+			contOpponent = 0;
 //			System.out.println();
 			
 			// left to right
 //			System.out.println("left to right");
 			for (int y = p.y, k = 0; y < state.getHeight(); y++, k++) {
-				if (state.getSpace(p.x, y) == opponent || k == state.getkLength())
+				if (contOpponent == (state.getkLength()) - 1)
+					return MAX_RANK;
+				else if (state.getSpace(p.x, y) == opponent)
+					contOpponent += 1;
+				else if (k == state.getkLength())
 					break;
-				else if (state.getSpace(p.x, y) == 0)
+				else if (state.getSpace(p.x, y) == 0) {
 					hRank += emptyRank;
-				else if (state.getSpace(p.x, y) == player)
+					contOpponent = 0;
+				}
+				else if (state.getSpace(p.x, y) == player) {
 					hRank += pieceRank;
+					contOpponent = 0;
+				}
 //				System.out.print("(" + p.x + "," + y + ")");
 			}
+			contOpponent = 0;
 //			System.out.println();
 			
 			// right to left
 //			System.out.println("right to left");
 			for (int y = p.y, k = 0; y >= 0; y--, k++) {
-				if (state.getSpace(p.x, y) == opponent || k == state.getkLength())
+				if (contOpponent == (state.getkLength()) - 1)
+					return MAX_RANK;
+				else if (state.getSpace(p.x, y) == opponent)
+					contOpponent += 1;
+				else if (k == state.getkLength())
 					break;
-				else if (state.getSpace(p.x, y) == 0)
+				else if (state.getSpace(p.x, y) == 0) {
 					hRank += emptyRank;
-				else if (state.getSpace(p.x, y) == player)
+					contOpponent = 0;
+				}
+				else if (state.getSpace(p.x, y) == player) {
 					hRank += pieceRank;
+					contOpponent = 0;
+				}
 //				System.out.print("(" + p.x + "," + y + ")");
 			}
+			contOpponent = 0;
 //			System.out.println();
 			
 			// upper-right
@@ -167,18 +207,28 @@ public class Node {
 				
 				int y = p.y;
 				for (int x = p.x, k = 0; x >= 0; x--, k++) {
-					if (state.getSpace(x, y) == opponent || k == state.getkLength())
+					if (contOpponent == (state.getkLength()) - 1)
+						return MAX_RANK;
+					else if (state.getSpace(x, y) == opponent)
+						contOpponent += 1;
+					else if (k == state.getkLength())
 						break;
-					else if (state.getSpace(x, y) == 0)
+					else if (state.getSpace(x, y) == 0) {
 						hRank += emptyRank;
-					else if (state.getSpace(x, y) == player)
+						contOpponent = 0;
+					}
+					else if (state.getSpace(x, y) == player) {
 						hRank += pieceRank;
+						contOpponent = 0;
+					}
 //					System.out.print("(" + x + "," + y + ")");
 					y++;
-					
-
 				}
 			} catch (IndexOutOfBoundsException e) {}
+			finally {
+				contOpponent = 0;
+			}
+			
 //			System.out.println();
 			
 			// lower-left
@@ -187,16 +237,27 @@ public class Node {
 				
 				int y = p.y;
 				for (int x = p.x, k = 0; x < state.getWidth(); x++, k++) {
-					if (state.getSpace(x, y) == opponent || k == state.getkLength())
+					if (contOpponent == (state.getkLength()) - 1)
+						return MAX_RANK;
+					else if (state.getSpace(x, y) == opponent)
+						contOpponent += 1;
+					else if (k == state.getkLength())
 						break;
-					else if (state.getSpace(x ,y) == 0)
+					else if (state.getSpace(x ,y) == 0) {
 						hRank += emptyRank;
-					else if (state.getSpace(x, y) == player)
+						contOpponent =0;
+					}
+					else if (state.getSpace(x, y) == player) {
 						hRank += pieceRank;
+						contOpponent = 0;
+					}
 //					System.out.print("(" + x + "," + y + ")");
 					y--;
 				}
 			} catch (IndexOutOfBoundsException e) {}
+			finally {
+				contOpponent = 0;
+			}
 //			System.out.println();
 			
 			// upper-left
@@ -204,16 +265,28 @@ public class Node {
 			try {
 				int y = p.y;
 				for (int x = p.x, k = 0; x >= 0; x--, k++) {
-					if (state.getSpace(x, y) == opponent || k == state.getkLength())
+					if (contOpponent == (state.getkLength()) - 1)
+						return MAX_RANK;
+					else if (state.getSpace(x, y) == opponent)
+						contOpponent += 1;
+					else if (k == state.getkLength())
 						break;
-					else if (state.getSpace(x, y) == 0)
+					else if (state.getSpace(x, y) == 0) {
 						hRank += emptyRank;
-					else if (state.getSpace(x, y) == player)
+						contOpponent = 0;
+					}
+					else if (state.getSpace(x, y) == player) {
 						hRank += pieceRank;
+						contOpponent = 0;
+					}
+					
 //					System.out.print("(" + x + "," + y + ")");
 					y--;
 				}
 			} catch (IndexOutOfBoundsException e) {}
+			finally {
+				contOpponent = 0;
+			}
 //			System.out.println();
 		
 			// lower-right
@@ -222,16 +295,27 @@ public class Node {
 				
 				int y = p.y;
 				for (int x = p.x, k = 0; x < state.getWidth(); x++, k++) {
-					if (this.state.getSpace(x, y) == opponent || k == state.getkLength())
+					if (contOpponent == (state.getkLength()) - 1)
+						return MAX_RANK;
+					else if (this.state.getSpace(x, y) == opponent)
+						contOpponent += 1;
+					else if (k == state.getkLength())
 						break;
-					else if (state.getSpace(x, y) == 0)
+					else if (state.getSpace(x, y) == 0) {
 						hRank += emptyRank;
-					else if (state.getSpace(x, y) == player)
+						contOpponent = 0;
+					}
+					else if (state.getSpace(x, y) == player) {
 						hRank += pieceRank;
+						contOpponent = 0;
+					}
 //					System.out.print("(" + x + "," + y + ")");
 					y++;
 				}
 			} catch (IndexOutOfBoundsException e) {}
+			finally {
+				contOpponent = 0;
+			}
 //			System.out.println();
 					
 			return hRank;
@@ -318,7 +402,7 @@ public class Node {
 //			board = board.placePiece(new Point(1,1), (byte) 1);
 //			board = board.placePiece(new Point(0,2), (byte) 2);
 //			board = board.placePiece(new Point(0,3), (byte) 2);
-////			board = board.placePiece(new Point(2,0), (byte) 2);
+//			board = board.placePiece(new Point(2,1), (byte) 1);
 //			board = board.placePiece(new Point(4,4), (byte) 1);
 ////			board = board.placePiece(new Point(2,2), (byte) 1);
 //
