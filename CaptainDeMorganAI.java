@@ -21,7 +21,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 	
 	@Override
 	public Point getMove(BoardModel state) {
-		Node n;
+		Node n = null;
 		Point move;
 		if (state.getLastMove() != null) {
 			n = new Node(state, 0, null, cutOff); // initialized to null if AI is player 1 making the first move
@@ -30,6 +30,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 		else { // CaptainDeMorgain is the first to move
 			move = new Point(state.getWidth() / 2, state.getHeight() / 2);
 		}
+		
 		
 		int nodes = Node.getNodeCount();
 		System.out.println("Total Nodes Computed:" + nodes);
@@ -53,6 +54,14 @@ public class CaptainDeMorganAI extends CKPlayer {
 	}
 	
 	private int setCutoff(boolean gravity) {
+		// Gravity ON
+		// Player 1: CaptainDeMorgan - Player 2: PoorAI - Max Depth: 
+		// Player 1: PoorAI - Player 2: CaptainDeMorgan - Max Depth: 
+		
+		// Gravity OFF
+		// Player 1: CaptainDeMorgan - Player 2: PoorAI - Max Depth:
+		// Player 1: PoorAI - Player 2: CaptainDeMorgan - Max Depth: 
+		
 		if (gravity)
 			return 5;
 		else
@@ -70,7 +79,8 @@ public class CaptainDeMorganAI extends CKPlayer {
 		Node bestNode = null;
 		
 		for (Point p : nextMoves) {
-			Node nextNode = new Node(n.nextState(p), n.getDepth()+1, p, n.getCutoff()); // currently at depth = 1; lastMove() returns 2
+			Node nextNode = new Node(n.nextState(p), n.getDepth()+1, p, n.getCutoff()); // When the move is applied, the turns switch
+			
 			Node.incNodeCount();
 			int rank = min(nextNode, nextNode.getDepth(), alpha, beta).getRank();
 //			System.out.println("Alpha: " + alpha + " Beta: " + beta);
@@ -94,7 +104,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 		// minimize player 1
 
 		if (n.getState().winner() != -1) { // base case 1: no more available moves
-			n.evalGame();
+			n.setRank(n.evalGame());
 			return n;
 		}
 		
@@ -132,7 +142,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 	private Node max(Node n, int depth, int alpha, int beta) {
 		// maximize player 2
 		if (n.getState().winner() != -1) { // base case 1
-			n.evalGame();
+			n.setRank(n.evalGame());
 			return n;
 		}
 		
