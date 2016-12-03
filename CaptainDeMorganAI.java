@@ -65,7 +65,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 		if (gravity)
 			return 5;
 		else
-			return 4;
+			return 2;
 	}
 	
 	private Node minimax(Node n, int alpha, int beta) {
@@ -109,7 +109,7 @@ public class CaptainDeMorganAI extends CKPlayer {
 		}
 		
 		if (n.getDepth() >= n.getCutoff()) { // base case 2: depth cut-off reached so rank current state with the heuristic function
-			n.setRank(-n.heuristic(n.getMove())); // negative heuristic value
+			n.setRank(-n.heuristic(n.getMove())); // negative heuristic value leads to CaptainDeMorgan winning
 			return n;
 		}
 		

@@ -91,38 +91,27 @@ public class Node {
 		}
 				
 		public int heuristic(Point p) {
-			int sum = 0;
-			
-			if (state.gravityEnabled()) {
+			int hRankPlayer = 0;
+			int hRankOpponent = 0;
+//			if (state.gravityEnabled()) {
 				for (Point pt : cacheNextMoves) {
-					sum += checkEightDirections(pt);
-//					if (hRank == MAX_RANK) { // killer heuristic move found
-//						System.out.println(p);
-//						System.out.println(state.toString());
-//						System.out.println("MAX_RANK");
-//						return hRank;
-//					}
-//					else if (hRank == MAX_BLOCK_RANK) {
-//						System.out.println("MAX_BLOCK_RANK");
-//						System.exit(0);
-//						return hRank;
-//					}
-//					sum += hRank;
-				}		
-			}
-			else {
-				return checkEightDirections(p);
-			}
-			return sum;
+					hRankPlayer += checkEightDirections(pt, player, opponent);
+					hRankOpponent += checkEightDirections(pt, opponent, player);
+				}	
+				return hRankPlayer - hRankOpponent;
+//			}
+//			else {
+//				return checkEightDirections(p, player, opponent) - checkEightDirections(p, opponent, player);
+//			}
 		}
 		
 	
-		public int checkEightDirections(Point p) {
+		public int checkEightDirections(Point p, int player, int opponent) {
 			// Summing the player's pieces within k spaces of P
 			// By definition, a heuristic always underestimates the actual cost to a goal node.
 			int pieceRank = 10;
 			int twoMovesAwayRank = 100;
-			int oneMovesAwayRank = 1000;
+			int oneMovesAwayRank = MAX_RANK;
 			int emptyRank = 1;
 			int hRank = -(emptyRank * 8) + pieceRank; // to account for over-counting 
 			int contOpponent = 0;
@@ -133,8 +122,7 @@ public class Node {
 				if (contPlayer == state.getkLength() - 2)
 					hRank += twoMovesAwayRank;
 				else if (contPlayer == state.getkLength() - 1) {
-					System.out.println(state.toString());
-					hRank += oneMovesAwayRank;
+					return oneMovesAwayRank;
 				}
 //				else if (contOpponent == (state.getkLength() - 1))
 //					return MAX_BLOCK_RANK;
@@ -163,8 +151,7 @@ public class Node {
 				if (contPlayer == state.getkLength() - 2)
 					hRank += twoMovesAwayRank;
 				else if (contPlayer == state.getkLength() - 1) {
-					System.out.println(state.toString());
-					hRank += oneMovesAwayRank;
+					return oneMovesAwayRank;
 				}
 //				else if (contOpponent == (state.getkLength()) - 1)
 //					return MAX_BLOCK_RANK;
@@ -194,8 +181,7 @@ public class Node {
 				if (contPlayer == state.getkLength() - 2)
 					hRank += twoMovesAwayRank;
 				else if (contPlayer == state.getkLength() - 1) {
-					System.out.println(state.toString());
-					hRank += oneMovesAwayRank;
+					return oneMovesAwayRank;
 				}
 //				else if (contOpponent == (state.getkLength()) - 1)
 //					return MAX_BLOCK_RANK;
@@ -224,8 +210,7 @@ public class Node {
 				if (contPlayer == state.getkLength() - 2)
 					hRank += twoMovesAwayRank;
 				else if (contPlayer == state.getkLength() - 1) {
-					System.out.println(state.toString());
-					hRank += oneMovesAwayRank;
+					return oneMovesAwayRank;
 				}
 //				else if (contOpponent == (state.getkLength()) - 1)
 //					return MAX_BLOCK_RANK;
@@ -257,8 +242,7 @@ public class Node {
 					if (contPlayer == state.getkLength() - 2)
 						hRank += twoMovesAwayRank;
 					else if (contPlayer == state.getkLength() - 1) {
-						System.out.println(state.toString());
-						hRank += oneMovesAwayRank;
+						return oneMovesAwayRank;
 					}
 //					else if (contOpponent == (state.getkLength()) - 1)
 //						return MAX_BLOCK_RANK;
@@ -295,8 +279,7 @@ public class Node {
 					if (contPlayer == state.getkLength() - 2)
 						hRank += twoMovesAwayRank;
 					else if (contPlayer == state.getkLength() - 1) {
-						System.out.println(state.toString());
-						hRank += oneMovesAwayRank;
+						return oneMovesAwayRank;
 					}
 //					else if (contOpponent == (state.getkLength()) - 1)
 //						return MAX_BLOCK_RANK;
@@ -331,8 +314,7 @@ public class Node {
 					if (contPlayer == state.getkLength() - 2)
 						hRank += twoMovesAwayRank;
 					else if (contPlayer == state.getkLength() - 1) {
-						System.out.println(state.toString());
-						hRank += oneMovesAwayRank;
+						return oneMovesAwayRank;
 					}
 //					else if (contOpponent == (state.getkLength()) - 1)
 //						return MAX_BLOCK_RANK;
@@ -369,8 +351,7 @@ public class Node {
 					if (contPlayer == state.getkLength() - 2)
 						hRank += twoMovesAwayRank;
 					else if (contPlayer == state.getkLength() - 1) {
-						System.out.println(state.toString());
-						hRank += oneMovesAwayRank;
+						return oneMovesAwayRank;
 					}
 //					else if (contOpponent == (state.getkLength()) - 1)
 //						return MAX_BLOCK_RANK;
